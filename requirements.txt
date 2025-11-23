@@ -1,0 +1,9 @@
+langchain
+langchain-community
+faiss-cpu
+beautifulsoup4
+newspaper3k
+lxml_html_clean
+requests
+python-dotenv
+ollama
