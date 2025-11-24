@@ -7,3 +7,5 @@ lxml_html_clean
 requests
 python-dotenv
 ollama
+numpy
+pytest
