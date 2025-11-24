@@ -27,12 +27,13 @@ class ArticleScraper:
         self.cache_dir = cache_dir or os.getenv('ARTICLE_CACHE_DIR', 'data/raw_articles')
         os.makedirs(self.cache_dir, exist_ok=True)
     
-    def scrape_article(self, url: str) -> Dict[str, str]:
+    def scrape_article(self, url: str, timeout: int = 30) -> Dict[str, str]:
         """
         Scrape a single article from a URL.
         
         Args:
             url: URL of the article to scrape
+            timeout: Request timeout in seconds (default: 30)
             
         Returns:
             Dictionary containing article metadata and content
@@ -51,6 +52,12 @@ class ArticleScraper:
                 'top_image': article.top_image,
                 'scraped_at': datetime.now().isoformat()
             }
+        except requests.exceptions.Timeout as e:
+            print(f"Timeout error scraping {url}: {str(e)}")
+            return {}
+        except requests.exceptions.ConnectionError as e:
+            print(f"Connection error scraping {url}: {str(e)}")
+            return {}
         except Exception as e:
             print(f"Error scraping {url}: {str(e)}")
             return {}
