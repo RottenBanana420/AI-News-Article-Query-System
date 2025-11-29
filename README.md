@@ -17,8 +17,20 @@ A robust RAG-powered system for ingesting news articles, generating embeddings u
   - Batch processing with progress tracking
   - Connection and model verification
   
-- 🗄️ **Vector Storage**: FAISS-based vector database (planned)
-- 🔍 **Semantic Search**: Natural language querying (planned)
+- 🗄️ **Vector Storage**: FAISS HNSW-based vector database
+  - Sub-100ms query performance
+  - 768-dimensional embeddings
+  - Robust metadata synchronization
+  - Atomic save/load operations
+  
+- 🤖 **RAG Query Interface**: Conversational question answering with LangChain
+  - Natural language query processing
+  - Context-aware answer generation using Ollama llama3.1
+  - Automatic source citation extraction
+  - Multi-turn conversation support with history
+  - Configurable retrieval parameters (top-k, temperature)
+  
+- 🔍 **Semantic Search**: Natural language querying over article content
 - 🏗️ **Modular Architecture**: Clean separation of concerns for easy maintenance
 
 ## Project Structure
@@ -257,6 +269,44 @@ for article_path in saved_paths:
 print(f"\nCache statistics: {embedding_service.get_cache_stats()}")
 ```
 
+### RAG Query Interface
+
+```python
+from src.query.handler import QueryHandler
+
+# Initialize query handler (RAG enabled by default)
+handler = QueryHandler()
+
+# Ask a question and get an AI-generated answer with citations
+result = handler.ask_question("How is AI transforming healthcare?")
+
+print(f"Question: {result['question']}")
+print(f"Answer: {result['answer']}")
+print(f"\nSources:")
+for i, source in enumerate(result['sources'], 1):
+    print(f"  [{i}] {source['title']}")
+    print(f"      {source['url']}")
+print(f"\nResponse time: {result['response_time']:.2f}s")
+
+# Multi-turn conversation
+session_id = result['session_id']
+
+# Follow-up question (uses conversation history)
+result2 = handler.ask_question(
+    "What are some specific applications?",
+    session_id=session_id
+)
+
+print(f"\nFollow-up Answer: {result2['answer']}")
+
+# Custom configuration
+result3 = handler.ask_question(
+    "Tell me more about machine learning in medicine",
+    session_id=session_id,
+    top_k=10  # Retrieve more context chunks
+)
+```
+
 ## Configuration
 
 Environment variables in `.env`:
@@ -432,11 +482,15 @@ pytest tests/ -v --pdb
 - [x] Article extraction with error handling
 - [x] Ollama embedding service with caching
 - [x] Comprehensive test suite
-- [ ] FAISS vector store implementation
-- [ ] Query handler with semantic search
+- [x] FAISS vector store implementation
+- [x] RAG query interface with LangChain orchestration
+- [x] Conversation history management
+- [x] Multi-turn dialogue support
 - [ ] CLI interface
 - [ ] Web API (FastAPI)
 - [ ] Batch article processing pipeline
+- [ ] Advanced retrieval (hybrid search, reranking)
+- [ ] Streaming LLM responses
 
 ## License
 

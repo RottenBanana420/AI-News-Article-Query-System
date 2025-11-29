@@ -1,5 +1,6 @@
 langchain
 langchain-community
+langchain-ollama
 faiss-cpu
 beautifulsoup4
 newspaper3k
