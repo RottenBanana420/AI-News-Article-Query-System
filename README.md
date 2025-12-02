@@ -35,9 +35,11 @@ A robust RAG-powered system for ingesting news articles, generating embeddings u
 
 ## Project Structure
 
-```
+```text
 AI-News-Article-Query-System/
 ├── src/
+│   ├── main_pipeline.py          # Main system orchestration
+│   ├── cli.py                    # Command-line interface
 │   ├── ingestion/
 │   │   ├── article_extractor.py  # Comprehensive article extraction
 │   │   ├── scraper.py            # newspaper3k wrapper
@@ -48,18 +50,30 @@ AI-News-Article-Query-System/
 │   ├── storage/
 │   │   └── vector_store.py       # FAISS vector operations
 │   └── query/
-│       └── handler.py            # Query processing
+│       ├── handler.py            # RAG query processing
+│       ├── rag_service.py        # RAG orchestration
+│       └── conversation_manager.py # Conversation history
 ├── data/
 │   ├── raw_articles/             # Extracted articles (JSON)
-│   └── embeddings/
-│       └── cache/                # Embedding cache files
+│   ├── embeddings/               # Vector embeddings
+│   └── saved_states/             # Saved system states
 ├── tests/
 │   ├── test_article_extractor.py # Article extraction tests
-│   └── test_ollama_service.py    # Embedding service tests
+│   ├── test_ollama_service.py    # Embedding service tests
+│   ├── test_vector_store.py      # Vector store tests
+│   ├── test_rag_service.py       # RAG service tests
+│   ├── test_conversation_manager.py # Conversation tests
+│   ├── test_rag_integration.py   # End-to-end RAG tests
+│   ├── test_main_pipeline.py     # Pipeline integration tests
+│   └── test_cli.py               # CLI tests
+├── examples/
+│   ├── test_real_extraction.py   # Real-world extraction example
+│   └── README.md                 # Examples documentation
 ├── logs/                         # Application logs
 ├── scripts/
 │   ├── activate.sh               # Unix activation script
 │   └── activate.bat              # Windows activation script
+├── example_urls.txt              # Sample URLs for testing
 ├── .env.example                  # Environment template
 ├── requirements.txt              # Python dependencies
 └── README.md
@@ -68,11 +82,11 @@ AI-News-Article-Query-System/
 ## Prerequisites
 
 1. **pyenv** & **pyenv-virtualenv**: Python version management
-   - pyenv: https://github.com/pyenv/pyenv#installation
-   - pyenv-virtualenv: https://github.com/pyenv/pyenv-virtualenv#installation
+   - pyenv: <https://github.com/pyenv/pyenv#installation>
+   - pyenv-virtualenv: <https://github.com/pyenv/pyenv-virtualenv#installation>
 
 2. **Ollama**: Local LLM runtime for embeddings
-   - Installation: https://ollama.ai/download
+   - Installation: <https://ollama.ai/download>
    - **Required model**: `ollama pull nomic-embed-text`
 
 ## Setup Instructions
@@ -146,7 +160,156 @@ python -c "import langchain; import faiss; import bs4; import newspaper; import 
 python -c "from src.embeddings.ollama_service import OllamaEmbeddingService; s = OllamaEmbeddingService(); s.verify_connection(); s.verify_model_available(); print('✓ Ollama configured correctly!')"
 ```
 
-## Usage
+```
+
+## CLI Usage
+
+The system provides a comprehensive command-line interface for all operations:
+
+### Quick Start
+
+```bash
+# Ingest a single article
+python -m src.cli ingest --url https://example.com/article
+
+# Ingest articles from a file
+python -m src.cli ingest --file example_urls.txt
+
+# Search for articles
+python -m src.cli query "artificial intelligence in healthcare"
+
+# Ask a question with AI-generated answer
+python -m src.cli ask "How is AI transforming healthcare?"
+
+# View system statistics
+python -m src.cli stats
+
+# Save current state
+python -m src.cli save my_state --description "Healthcare articles"
+
+# Load a saved state
+python -m src.cli load my_state
+
+# List all saved states
+python -m src.cli list-states
+```
+
+### CLI Commands
+
+#### Ingest Articles
+
+```bash
+# Single URL
+python -m src.cli ingest --url https://techcrunch.com/article
+
+# Batch from file (with custom delay)
+python -m src.cli ingest --file urls.txt --delay 2.0
+
+# Enable verbose logging
+python -m src.cli --verbose ingest --file urls.txt
+```
+
+#### Semantic Search
+
+```bash
+# Basic search
+python -m src.cli query "machine learning"
+
+# Get more results
+python -m src.cli query "AI ethics" --top-k 10
+```
+
+#### RAG Question Answering
+
+```bash
+# Ask a question
+python -m src.cli ask "What are the latest developments in AI?"
+
+# Multi-turn conversation (use session ID)
+python -m src.cli ask "Tell me more" --session abc123
+
+# Disable source citations
+python -m src.cli ask "Explain neural networks" --no-sources
+
+# Retrieve more context
+python -m src.cli ask "How does GPT work?" --top-k 10
+```
+
+#### State Management
+
+```bash
+# Save current state
+python -m src.cli save healthcare_articles --description "Articles about AI in healthcare"
+
+# Load a saved state
+python -m src.cli load healthcare_articles
+
+# List all saved states
+python -m src.cli list-states
+
+# Overwrite existing state
+python -m src.cli save my_state --overwrite
+```
+
+#### System Statistics
+
+```bash
+# View comprehensive statistics
+python -m src.cli stats
+```
+
+## Main Pipeline
+
+The `ArticleQuerySystem` class provides a high-level integration layer that orchestrates all components:
+
+### Python API
+
+```python
+from src.main_pipeline import ArticleQuerySystem
+
+# Initialize the system
+system = ArticleQuerySystem()
+
+# Ingest a single article
+result = system.ingest_article('https://example.com/article')
+print(f"Ingested {result['chunks_created']} chunks in {result['processing_time']:.2f}s")
+
+# Ingest from file
+results = system.ingest_from_file('example_urls.txt', delay=1.0, show_progress=True)
+print(f"Successfully ingested {results['successful']}/{results['total']} articles")
+
+# Semantic search
+results = system.query("artificial intelligence", top_k=5)
+for result in results:
+    print(f"{result['metadata']['title']}: {result['similarity']:.3f}")
+
+# RAG question answering
+answer = system.ask_question("How is AI transforming healthcare?")
+print(f"Answer: {answer['answer']}")
+print(f"Sources: {len(answer['sources'])}")
+
+# Save current state
+system.save_state('my_state', description='Healthcare articles')
+
+# Load a saved state
+system.load_state('my_state')
+
+# Get statistics
+stats = system.get_stats()
+print(f"Total articles: {stats['total_articles']}")
+print(f"Total chunks: {stats['total_chunks']}")
+```
+
+### Pipeline Features
+
+- **Unified Interface**: Single entry point for all operations
+- **Dependency Injection**: Customize components as needed
+- **State Persistence**: Save and load complete system states
+- **Progress Tracking**: Built-in progress indicators for batch operations
+- **Error Handling**: Comprehensive error handling and logging
+- **Statistics**: Detailed system metrics and cache statistics
+
+## Component-Level Usage
 
 ### Article Extraction
 
@@ -345,14 +508,20 @@ pytest tests/ --cov=src --cov-report=html
 
 ### Test Categories
 
-**Article Extraction Tests** (`test_article_extractor.py`):
+#### Article Extraction Tests
+
+File: `test_article_extractor.py`
+
 - URL validation and error handling
 - Single and batch extraction
 - Quality validation
 - Retry logic with exponential backoff
 - JSON storage and indexing
 
-**Embedding Service Tests** (`test_ollama_service.py`):
+#### Embedding Service Tests
+
+File: `test_ollama_service.py`
+
 - Connection verification
 - Model availability checking
 - Text chunking (various sizes and overlaps)
@@ -364,8 +533,8 @@ pytest tests/ --cov=src --cov-report=html
 ### Manual Testing
 
 ```bash
-# Test article extraction
-python test_real_extraction.py
+# Test article extraction (example script)
+python examples/test_real_extraction.py
 
 # Test embedding service
 python -c "
@@ -395,6 +564,7 @@ eval "$(pyenv virtualenv-init -)"
 ### Ollama Issues
 
 **Connection errors:**
+
 ```bash
 # Start Ollama service
 ollama serve
@@ -404,6 +574,7 @@ curl http://localhost:11434/api/tags
 ```
 
 **Model not found:**
+
 ```bash
 # List available models
 ollama list
@@ -413,12 +584,14 @@ ollama pull nomic-embed-text
 ```
 
 **Timeout errors:**
+
 - Increase timeout in service initialization: `OllamaEmbeddingService(timeout=60)`
 - Reduce chunk size for very long texts: `chunk_size=500`
 
 ### FAISS Installation
 
 If FAISS fails to install:
+
 ```bash
 pip install faiss-cpu --no-cache-dir
 ```
@@ -426,6 +599,7 @@ pip install faiss-cpu --no-cache-dir
 ### Import Errors
 
 Ensure you're in the project root with activated environment:
+
 ```bash
 cd /Users/kusaihajuri/Projects/AI-News-Article-Query-System
 pyenv local ai-news-query
@@ -486,11 +660,13 @@ pytest tests/ -v --pdb
 - [x] RAG query interface with LangChain orchestration
 - [x] Conversation history management
 - [x] Multi-turn dialogue support
-- [ ] CLI interface
+- [x] CLI interface
+- [x] Main pipeline system integration
+- [x] State persistence (save/load)
 - [ ] Web API (FastAPI)
-- [ ] Batch article processing pipeline
 - [ ] Advanced retrieval (hybrid search, reranking)
 - [ ] Streaming LLM responses
+- [ ] Web UI dashboard
 
 ## License
 
@@ -499,6 +675,7 @@ See [LICENSE](LICENSE) file for details.
 ## Contributing
 
 Contributions are welcome! Please:
+
 1. Fork the repository
 2. Create a feature branch
 3. Add tests for new functionality

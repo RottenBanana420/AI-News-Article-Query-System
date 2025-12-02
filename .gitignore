@@ -177,13 +177,29 @@ cython_debug/
 #.idea/
 
 # Project-specific
+# Raw articles (keep directory structure only)
 data/raw_articles/*
 !data/raw_articles/.gitkeep
+
+# Embeddings and vector stores
 data/embeddings/*
 !data/embeddings/.gitkeep
+
+# Saved states (these can be large and user-specific)
+data/saved_states/*
+!data/saved_states/.gitkeep
+
+# Vector index files
 *.index
 *.pkl
 *.pickle
+
+# Log files (application logs can contain sensitive info)
+logs/*.log
+logs/**/*.log
+
+# Keep .gitkeep files in empty directories
+!**/.gitkeep
 
 # Abstra
 # Abstra is an AI-powered process automation framework.
@@ -215,3 +231,4 @@ data/embeddings/*
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
