@@ -1,0 +1,21 @@
+# Example News Article URLs for Testing
+# These are real, publicly accessible news articles from reputable sources
+
+# Technology & AI
+https://www.bbc.com/news/technology-65855333
+https://www.theguardian.com/technology/2023/dec/01/chatgpt-ai-artificial-intelligence
+
+# Healthcare & Science
+https://www.nature.com/articles/d41586-023-03023-4
+https://www.sciencedaily.com/releases/2023/11/231130142856.htm
+
+# Business & Economics
+https://www.reuters.com/technology/artificial-intelligence/
+https://www.bloomberg.com/news/articles/2023-11-30/ai-revolution-transforms-healthcare-industry
+
+# General News
+https://www.npr.org/sections/health-shots/2023/11/29/ai-healthcare-diagnosis
+https://apnews.com/article/artificial-intelligence-technology-health-science
+
+# Climate & Environment
+https://www.scientificamerican.com/article/ai-climate-change-solutions/
