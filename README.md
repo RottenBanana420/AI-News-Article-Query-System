@@ -6,9 +6,17 @@ A robust RAG-powered system for ingesting news articles, generating embeddings u
 
 - 📰 **Article Extraction**: Robust article scraping with `newspaper3k` and `BeautifulSoup4`
   - Comprehensive error handling with retry logic
+  - **Parallel processing** for high-throughput extraction
   - Quality validation and text normalization
   - Batch processing with configurable delays
   - Structured JSON storage with metadata indexing
+  
+- 📊 **Evaluation Metrics**: Comprehensive RAG evaluation suite
+  - **Answer Relevancy**: Hybrid scoring (TF-IDF + Token Overlap)
+  - **Context Precision/Recall**: Retrieval quality assessment
+  - **Faithfulness**: Fact consistency checking
+  - **Performance Tracking**: Response time percentiles (P50, P90, P99)
+  - **IR Metrics**: MRR and MAP for ranking quality
   
 - 🧠 **Embedding Generation**: High-performance embedding service using Ollama
   - Direct integration with `nomic-embed-text` model (768 dimensions)
@@ -340,6 +348,15 @@ saved_paths = extractor.extract_and_save_batch(urls, delay=1.0)
 # View extraction index
 index = extractor.get_index()
 print(f"Extracted {len(index)} articles")
+
+# Parallel extraction (faster for many URLs)
+urls = ['https://site1.com/a', 'https://site2.com/b', 'https://site3.com/c']
+saved_paths = extractor.extract_and_save_batch_parallel(
+    urls,
+    max_workers=4,
+    show_progress=True
+)
+
 ```
 
 ### Embedding Generation
@@ -430,6 +447,35 @@ for article_path in saved_paths:
 
 # 4. View statistics
 print(f"\nCache statistics: {embedding_service.get_cache_stats()}")
+```
+
+### Evaluation Metrics
+
+```python
+from src.evaluation.evaluation_metrics import EvaluationMetrics
+
+# Initialize metrics
+metrics = EvaluationMetrics()
+
+# Evaluate a single query result
+result = {
+    'question': "What is RAG?",
+    'answer': "Retrieval-Augmented Generation combines retrieval and generation.",
+    'expected_answer': "RAG is a technique that enhances LLM generation with external data.",
+    'context': ["RAG stands for Retrieval-Augmented Generation..."],
+    'response_time': 0.45
+}
+
+scores = metrics.evaluate_single_query(result)
+print(f"Answer Relevancy: {scores['answer_relevancy']:.2f}")
+print(f"Faithfulness: {scores['faithfulness']:.2f}")
+
+# Aggregate results from multiple queries
+all_results = [result, result]  # List of query results
+aggregate = metrics.aggregate_results(all_results)
+print(f"Mean Relevancy: {aggregate['mean_answer_relevancy']:.2f}")
+print(f"P99 Latency: {aggregate['response_time_stats']['p99']:.3f}s")
+
 ```
 
 ### RAG Query Interface
@@ -663,6 +709,8 @@ pytest tests/ -v --pdb
 - [x] CLI interface
 - [x] Main pipeline system integration
 - [x] State persistence (save/load)
+- [x] Parallel article extraction
+- [x] RAG evaluation metrics suite
 - [ ] Web API (FastAPI)
 - [ ] Advanced retrieval (hybrid search, reranking)
 - [ ] Streaming LLM responses
