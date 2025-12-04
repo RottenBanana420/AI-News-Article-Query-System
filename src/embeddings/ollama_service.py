@@ -469,7 +469,7 @@ class OllamaEmbeddingService:
         Args:
             texts: List of input texts
             use_cache: Whether to use caching
-            show_progress: Whether to log progress
+            show_progress: Whether to show progress bar
             progress_callback: Optional callback function(current, total)
             
         Returns:
@@ -484,23 +484,32 @@ class OllamaEmbeddingService:
         logger.info(f"Processing {total} texts in batches of {self.batch_size}")
         start_time = time.time()
         
-        for i in range(0, total, self.batch_size):
-            batch = texts[i:i + self.batch_size]
-            batch_embeddings = []
-            
-            for text in batch:
-                embedding = self.generate_embedding(text, use_cache=use_cache)
-                batch_embeddings.append(embedding)
-            
-            embeddings.extend(batch_embeddings)
-            
-            # Progress tracking
-            current = min(i + self.batch_size, total)
-            if show_progress:
-                logger.info(f"Progress: {current}/{total} ({current/total*100:.1f}%)")
-            
-            if progress_callback:
-                progress_callback(current, total)
+        # Import tqdm here to avoid issues if not installed
+        from tqdm import tqdm
+        
+        # Process with progress bar
+        if show_progress:
+            with tqdm(total=total, desc="Generating embeddings", unit="text") as pbar:
+                for i in range(0, total, self.batch_size):
+                    batch = texts[i:i + self.batch_size]
+                    
+                    for text in batch:
+                        embedding = self.generate_embedding(text, use_cache=use_cache)
+                        embeddings.append(embedding)
+                        pbar.update(1)
+                        
+                        if progress_callback:
+                            progress_callback(len(embeddings), total)
+        else:
+            for i in range(0, total, self.batch_size):
+                batch = texts[i:i + self.batch_size]
+                
+                for text in batch:
+                    embedding = self.generate_embedding(text, use_cache=use_cache)
+                    embeddings.append(embedding)
+                    
+                    if progress_callback:
+                        progress_callback(len(embeddings), total)
         
         elapsed = time.time() - start_time
         rate = total / elapsed if elapsed > 0 else 0
